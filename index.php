@@ -87,6 +87,8 @@ class ProductSocialProofPlugin {
     }
 
     public function shortcode_callback(array $atts): string {
+        ob_start();
+        
         $attributes = shortcode_atts([
             'product' => '',
             'interval' => '2000',
@@ -99,12 +101,14 @@ class ProductSocialProofPlugin {
 
         $this->get_names_from_locale($gender);
 
-        return sprintf(
+        echo sprintf(
             '<div class="product-social-proof" data-product="%s" data-interval="%s" data-gender="%s"></div>',
             esc_attr($product),
             esc_attr($interval),
             esc_attr($gender)
         );
+
+        return ob_get_clean();
     }
 
     private function get_user_location_from_ip(): string {
