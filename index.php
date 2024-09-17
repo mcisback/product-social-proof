@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Product Social Proof
- * Description: A plugin that creates a shortcode to display dynamic product information using Faker.js and geolocation.
+ * Description: A plugin that creates a shortcode to display dynamic product information using Faker and geolocation.
  * Version: 1.0
  * Author: Marco Caggiano
  */
