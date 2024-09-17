@@ -4,20 +4,20 @@
  * Description: A plugin that creates a shortcode to display dynamic product information using Faker.js and geolocation.
  * Version: 1.0
  * Author: Marco Caggiano
- * Requires PHP: 8.0
  */
-
-declare(strict_types=1);
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
 class ProductSocialProofPlugin {
-    public function __construct(
-        private string $shortcode_name = 'product_social_proof',
-        private string $js_handle = 'product-social-proof-script',
-    ) {
+    private $shortcode_name;
+    private $js_handle;
+
+    public function __construct() {
+        $this->shortcode_name = 'product_social_proof';
+        $this->js_handle = 'product-social-proof-script';
+
         add_action('init', [$this, "init"]);
         add_action('wp_enqueue_scripts', [$this, "enqueue_scripts"]);
     }
@@ -46,16 +46,12 @@ class ProductSocialProofPlugin {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
 
-        // add_action( 'wp_head', function() use($data) {
-            ?>
-            <script type="application/json" id="product_social_proof_persons_names">
-                <?php echo json_encode( $data["data"], JSON_UNESCAPED_SLASHES ); ?>
-            </script>
-            <?php
-        // });
+        ?>
+        <script type="application/json" id="product_social_proof_persons_names">
+            <?php echo json_encode( $data["data"], JSON_UNESCAPED_SLASHES ); ?>
+        </script>
+        <?php
     }
-
-    // http://geodb-free-service.wirefreethought.com/v1/geo/places?limit=5&offset=30&types=CITY&location=43.7793%2B11.2463&languageCode=it
 
     public function get_locations_near_ip(): void {
         $location = urlencode($this->get_user_location_from_ip());
@@ -81,14 +77,6 @@ class ProductSocialProofPlugin {
     }
 
     public function enqueue_scripts(): void {
-        // wp_enqueue_script(
-        //     $this->faker_handle,
-        //     'https://cdnjs.cloudflare.com/ajax/libs/Faker/3.1.0/faker.min.js',
-        //     [],
-        //     '3.1.0',
-        //     true
-        // );
-
         wp_enqueue_script(
             $this->js_handle,
             plugin_dir_url(__FILE__) . 'js/socialproof.js',
@@ -115,7 +103,7 @@ class ProductSocialProofPlugin {
             '<div class="product-social-proof" data-product="%s" data-interval="%s" data-gender="%s"></div>',
             esc_attr($product),
             esc_attr($interval),
-            esc_attr($gender),
+            esc_attr($gender)
         );
     }
 
