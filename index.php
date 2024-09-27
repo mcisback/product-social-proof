@@ -56,24 +56,26 @@ class ProductSocialProofPlugin {
     public function get_locations_near_ip(): void {
         $location = urlencode($this->get_user_location_from_ip());
 
-        $geo_url = "http://geodb-free-service.wirefreethought.com/v1/geo/places?limit=10&offset=0&types=CITY&location=$location&languageCode=it";
+        if($location) {
+            $geo_url = "http://geodb-free-service.wirefreethought.com/v1/geo/places?limit=10&offset=0&types=CITY&location=$location&languageCode=it";
 
-        $response = wp_remote_get($geo_url, ['timeout' => 10]);
-
-        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
-            throw new Exception("geodb-free-service unavailable: " . wp_remote_retrieve_response_message($response));
+            $response = wp_remote_get($geo_url, ['timeout' => 10]);
+    
+            if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
+                throw new Exception("geodb-free-service unavailable: " . wp_remote_retrieve_response_message($response));
+            }
+    
+            $body = wp_remote_retrieve_body($response);
+            $data = json_decode($body, true);
+    
+            add_action( 'wp_head', function() use($data) {
+                ?>
+                <script type="application/json" id="product_social_proof_geos">
+                    <?php echo json_encode( $data["data"], JSON_UNESCAPED_SLASHES ); ?>
+                </script>
+                <?php
+            });
         }
-
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-
-        add_action( 'wp_head', function() use($data) {
-            ?>
-            <script type="application/json" id="product_social_proof_geos">
-                <?php echo json_encode( $data["data"], JSON_UNESCAPED_SLASHES ); ?>
-            </script>
-            <?php
-        });
     }
 
     public function enqueue_scripts(): void {
@@ -111,14 +113,19 @@ class ProductSocialProofPlugin {
         return ob_get_clean();
     }
 
-    private function get_user_location_from_ip(): string {
+    private function get_user_location_from_ip(): string | null {
         $ip_address = $_SERVER['REMOTE_ADDR'];
         $api_url = "https://ipapi.co/{$ip_address}/json/";
 
         $response = wp_remote_get($api_url);
 
+        // Better to log this error and notify the user, this exception breaks wordpress
+        // if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
+        //     throw new Exception("ipapi.co unavailable: " . wp_remote_retrieve_response_message($response));
+        // }
+
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
-            throw new Exception("ipapi.co unavailable: " . wp_remote_retrieve_response_message($response));
+            return null;
         }
 
         $body = wp_remote_retrieve_body($response);
